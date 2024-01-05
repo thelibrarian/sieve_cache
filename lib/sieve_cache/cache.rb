@@ -7,8 +7,10 @@ module SieveCache
   # Works much like a Hash where items are looked up by key, returning `nil` if
   # there is a cache miss.
   class Cache
-    Node = Struct.new('Node', :key, :value, :visited, :prev, :next)
+    Node = Struct.new('Node', :key, :value, :visited, :prev, :next) # :nodoc:
 
+    # The +capacity+ is the maximum number of items that
+    # will be stored in the cache.
     def initialize(capacity)
       @capacity = capacity
       @lookup = {}
@@ -17,6 +19,11 @@ module SieveCache
       @hand = nil
     end
 
+    # Store an item in the cache.
+    # Raises an error if the cache is at capacity. Does not carry out any
+    # eviction process.
+    # +key+ - the identifier used to find the value in the cache in future
+    # +value+ - the data to be stored in the cache
     def store(key, value)
       raise StandardError, 'Unable to store item, cache is full' if size >= @capacity
 
@@ -30,6 +37,11 @@ module SieveCache
       @lookup[key] = n
     end
 
+    # Fetch a cached value from the cache, if it exists.
+    #
+    # If the key does not exist in the cache, it will execute the provided
+    # +block+ and store the return value against the +key+, carrying out the
+    # eviction process if the cache is at capacity. Otherwise, +nil+ is returned.
     def fetch(key, &block)
       return nil unless @lookup.key?(key) || block_given?
 
@@ -43,6 +55,7 @@ module SieveCache
       node.value
     end
 
+    # The number of items currently stored in the cache.
     def size
       @lookup.size
     end
