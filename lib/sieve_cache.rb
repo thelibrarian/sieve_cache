@@ -6,7 +6,7 @@
 # Works much like a Hash where items are looked up by key, returning `nil` if
 # there is a cache miss.
 class SieveCache
-  Node = Struct.new('Node', :key, :value, :prev, :next, :visited)
+  Node = Struct.new('Node', :key, :value, :visited, :prev, :next)
 
   def initialize(capacity)
     @capacity = capacity
@@ -19,7 +19,7 @@ class SieveCache
   def store(key, value)
     raise StandardError, 'Unable to store item, cache is full' if size >= @capacity
 
-    n = Node.new(key: key, value: value, next: @head, visited: false)
+    n = Node.new(key: key, value: value, visited: false, next: @head)
     @head.prev = n unless @head.nil?
     @head = n
     if @tail.nil?
