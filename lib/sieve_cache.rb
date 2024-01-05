@@ -19,9 +19,10 @@ class SieveCache
   def store(key, value)
     raise StandardError, 'Unable to store item, cache is full' if size >= @capacity
 
-    n = Node.new(key: key, value: value, prev: @head, visited: false)
+    n = Node.new(key: key, value: value, next: @head, visited: false)
+    @head.prev = n unless @head.nil?
     @head = n
-    if size.zero?
+    if @tail.nil?
       @tail = n
       @hand = n
     end
@@ -50,6 +51,25 @@ class SieveCache
   private
 
   def evict
-    nil
+    while @hand&.visited
+      @hand.visited = false
+      @hand = @hand.prev || @tail
+    end
+    delist_hand
+    @lookup.delete(@hand.key) unless @hand.nil?
+    @hand = @hand&.prev
+  end
+
+  def delist_hand
+    if @hand.prev
+      @hand.prev.next = @hand.next
+    else
+      @head = @hand.next
+    end
+    if @hand.next
+      @hand.next.prev = @hand.prev
+    else
+      @tail = @hand.prev
+    end
   end
 end
