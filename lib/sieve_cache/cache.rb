@@ -37,14 +37,10 @@ module SieveCache
       @default_proc = newproc
     end
 
-    # Store an item in the cache.
-    # Raises an error if the cache is at capacity. Does not carry out any
-    # eviction process.
-    # +key+ - the identifier used to find the value in the cache in future
-    # +value+ - the data to be stored in the cache
+    # Store +value+ in the cache using +key+ as the lookup key. If the cache is
+    # full, carries out the cache eviction process to free up a slot.
     def store(key, value)
-      raise StandardError, 'Unable to store item, cache is full' if size >= @capacity
-
+      evict if size == @capacity
       n = Node.new(key: key, value: value, visited: false, next: @head)
       @head.prev = n unless @head.nil?
       @head = n
@@ -57,17 +53,34 @@ module SieveCache
 
     alias []= store
 
+    # Returns the value associated with the given +key+, if found.
+    #
+    # If +key+ is not found, and `default_proc` is not nil, then default_proc
+    # will be called with +key+ as its argument. The result is stored in the
+    # cache and returned.
+    #
+    # Otherwise, returns `nil`
+    def [](key)
+      if default_proc
+        fetch(key, &default_proc)
+      else
+        fetch(key)
+      end
+    rescue KeyError
+      nil
+    end
+
     # Fetch a cached value from the cache, if it exists.
     #
-    # If the key does not exist in the cache, it will execute the provided
-    # +block+ and store the return value against the +key+, carrying out the
-    # eviction process if the cache is at capacity. Otherwise, +nil+ is returned.
+    # If +key+ is not found, and block is provied, then the block will be called
+    # with +key+ as its argument. The result is stored in the cache and returned.
+    #
+    # If +key+ is not found, and no block is provided, a `KeyError` is raised.
     def fetch(key, &block)
-      raise KeyError, "key not found: #{key}" unless @lookup.key?(key) || block_given?
-
       node = @lookup[key]
+      raise KeyError, "key not found: #{key}" unless node || block_given?
+
       if node.nil?
-        evict if count == @capacity
         node = store(key, block.call(key))
       else
         node.visited = true
