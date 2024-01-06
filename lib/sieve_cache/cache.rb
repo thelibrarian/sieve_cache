@@ -25,6 +25,12 @@ module SieveCache
       @hand = nil
     end
 
+    # Returns the value associated with the given +key+, if found.
+    # If +key+ is not found, returns `nil`
+    def [](key)
+      @lookup[key]&.value
+    end
+
     # Store an item in the cache.
     # Raises an error if the cache is at capacity. Does not carry out any
     # eviction process.
@@ -42,6 +48,8 @@ module SieveCache
       end
       @lookup[key] = n
     end
+
+    alias []= store
 
     # Fetch a cached value from the cache, if it exists.
     #
