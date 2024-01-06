@@ -49,7 +49,7 @@ module SieveCache
     # +block+ and store the return value against the +key+, carrying out the
     # eviction process if the cache is at capacity. Otherwise, +nil+ is returned.
     def fetch(key, &block)
-      raise KeyError, "key not foundre_relativee #{key}" unless @lookup.key?(key) || block_given?
+      raise KeyError, "key not found: #{key}" unless @lookup.key?(key) || block_given?
 
       node = @lookup[key]
       if node.nil?
