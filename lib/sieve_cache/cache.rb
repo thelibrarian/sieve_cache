@@ -15,20 +15,26 @@ module SieveCache
 
     def_delegators :@lookup, :empty?, :size, :length, :include?, :key?, :has_key?, :member?, :keys
 
+    attr_reader :default_proc
+
     # The +capacity+ is the maximum number of items that
     # will be stored in the cache.
-    def initialize(capacity)
+    def initialize(capacity, &block)
       @capacity = capacity
       @lookup = {}
       @head = nil
       @tail = nil
       @hand = nil
+      @default_proc = block if block_given?
     end
 
-    # Returns the value associated with the given +key+, if found.
-    # If +key+ is not found, returns `nil`
-    def [](key)
-      @lookup[key]&.value
+    # Sets the default `proc` called when querying the cache with a key that does not (yet)
+    # exist. The proc should expect a single argument, which is the key that was passed
+    # in to the original request.
+    def default_proc=(newproc)
+      raise TypeError, "wrong default_proce type #{newproc.class} (expected Proc)" unless newproc.instance_of?(Proc)
+
+      @default_proc = newproc
     end
 
     # Store an item in the cache.
