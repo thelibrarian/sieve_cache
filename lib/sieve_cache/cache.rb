@@ -43,12 +43,12 @@ module SieveCache
     # +block+ and store the return value against the +key+, carrying out the
     # eviction process if the cache is at capacity. Otherwise, +nil+ is returned.
     def fetch(key, &block)
-      return nil unless @lookup.key?(key) || block_given?
+      raise KeyError, "key not foundre_relativee #{key}" unless @lookup.key?(key) || block_given?
 
       node = @lookup[key]
       if node.nil?
-        evict
-        node = store(key, block.call)
+        evict if count == @capacity
+        node = store(key, block.call(key))
       else
         node.visited = true
       end
@@ -75,12 +75,12 @@ module SieveCache
     end
 
     def delist_hand
-      if @hand.prev
+      if @hand&.prev
         @hand.prev.next = @hand.next
       else
         @head = @hand.next
       end
-      if @hand.next
+      if @hand&.next
         @hand.next.prev = @hand.prev
       else
         @tail = @hand.prev
