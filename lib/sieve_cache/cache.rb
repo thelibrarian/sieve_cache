@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'forwardable'
+
 module SieveCache
   # A thread-safe general-purpose fixed-size cache that uses the SIEVE eviction
   # algorithm for evicting old cache items.
@@ -7,7 +9,11 @@ module SieveCache
   # Works much like a Hash where items are looked up by key, returning `nil` if
   # there is a cache miss.
   class Cache
+    extend Forwardable
+
     Node = Struct.new('Node', :key, :value, :visited, :prev, :next) # :nodoc:
+
+    def_delegators :@lookup, :empty?, :size, :length, :include?, :key?, :has_key?, :member?, :keys
 
     # The +capacity+ is the maximum number of items that
     # will be stored in the cache.
@@ -54,13 +60,6 @@ module SieveCache
       end
       node.value
     end
-
-    # The number of items currently stored in the cache.
-    def size
-      @lookup.size
-    end
-
-    alias count size
 
     private
 
