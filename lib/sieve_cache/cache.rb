@@ -20,6 +20,7 @@ module SieveCache
     # The +capacity+ is the maximum number of items that
     # will be stored in the cache.
     def initialize(capacity, &block)
+      @mutex = Thread::Mutex.new
       @capacity = capacity
       @lookup = {}
       @head = nil
@@ -40,15 +41,14 @@ module SieveCache
     # Store +value+ in the cache using +key+ as the lookup key. If the cache is
     # full, carries out the cache eviction process to free up a slot.
     def store(key, value)
-      evict if size == @capacity
-      n = Node.new(key: key, value: value, visited: false, next: @head)
-      @head.prev = n unless @head.nil?
-      @head = n
-      if @tail.nil?
-        @tail = n
-        @hand = n
+      @mutex.synchronize do
+        evict if size == @capacity
+        n = Node.new(key: key, value: value, visited: false, next: @head)
+        @head.prev = n unless @head.nil?
+        @head = n
+        @hand = @tail = n if @tail.nil?
+        @lookup[key] = n
       end
-      @lookup[key] = n
     end
 
     alias []= store
