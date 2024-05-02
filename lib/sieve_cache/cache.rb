@@ -11,7 +11,7 @@ module SieveCache
   class Cache
     extend Forwardable
 
-    Node = Struct.new('Node', :key, :value, :visited, :prev, :next) # :nodoc:
+    Node = Struct.new('Node', :value, :visited, :prev, :next) # :nodoc:
 
     def_delegators :@lookup, :empty?, :size, :length, :include?, :key?, :has_key?, :member?, :keys
 
@@ -43,7 +43,7 @@ module SieveCache
     def store(key, value)
       @mutex.synchronize do
         evict if size == @capacity
-        n = Node.new(key: key, value: value, visited: false, next: @head)
+        n = Node.new(value: value, visited: false, next: @head)
         @head.prev = n unless @head.nil?
         @head = n
         @hand = @tail = n if @tail.nil?
